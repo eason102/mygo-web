@@ -22001,11 +22001,14 @@ code {
 
 .card .card-title {
   color: #010101;
+  padding: 2px 20px;
   margin-bottom: 1.2rem;
   text-transform: capitalize;
-  font-size: 1.125rem;
+  font-size: 1.250rem;
   font-weight: 600;
+
 }
+
 
 .card .card-subtitle {
   font-weight: 400;
@@ -30542,6 +30545,25 @@ div.tagsinput span.tag a {
   top: 12px;
   background: transparent;
 }
+
+
+
+
+img {
+  max-width: 200px; /* 图片最大宽度 */
+  height: auto; /* 保持图片比例 */
+  border-radius: 8px; /* 图片圆角 */
+}
+
+
+
+.row {
+  margin: 0;
+}
+
+
+
+
 
 #settings-trigger {
   position: fixed;
