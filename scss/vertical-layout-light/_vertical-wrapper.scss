@@ -27,10 +27,10 @@
 
 .content-wrapper {
   background: $content-bg;
-  padding: 2.375rem 2.375rem;
+  padding: 1.0*rem 1.0rem;
   width: 100%;
   @include flex-grow(1);
   @media(max-width: 767px) {
-    padding: 1.5rem 1.5rem;
+    padding: 0.5rem 0.5rem;
   }
 }

@@ -13816,7 +13816,7 @@ input[type="button"].btn-block {
 .card-body {
   flex: 1 1 auto;
   min-height: 1px;
-  padding: 1.25rem;
+  padding: 0.2rem;
 }
 
 .card-title {
@@ -28452,16 +28452,22 @@ div.tagsinput span.tag a {
 }
 
 .content-wrapper {
-  background: #F5F7FF;
-  padding: 2.375rem 2.375rem;
+  background: rgba(212, 219, 247, 0.9);  /* 調整最後的數值(0.9)來控制透明度 */
+  background-image: url('mygo-logo.png');
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  padding: 0.15rem;
   width: 100%;
-  -webkit-flex-grow: 1;
+  min-height: 100vh;
   flex-grow: 1;
+  background-blend-mode: soft-light;  /* 改用 soft-light 混合模式會更柔和 */
 }
 
 @media (max-width: 767px) {
   .content-wrapper {
-    padding: 1.5rem 1.5rem;
+    padding: 0.5rem 0.5rem;
   }
 }
 
