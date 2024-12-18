@@ -6,7 +6,6 @@
     <title>MyGO台詞BOT-即時數據</title>
     <!-- Chart.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
-
     <!-- Font Awesome -->
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
@@ -392,20 +391,20 @@ tr:hover {
           <div>
             <h2>伺服器數量</h2>
             <div class="server-stats">
-              <span id="serverCount" class="stats-number">-</span>
+              <div id="serverCount" class="stats-number">-</div>
               <div id="serverChange" class="stats-change">-</div>
             </div>
             <p>自動更新中...</p>
           </div>
           <div>
             <h2>總使用數</h2>
-            <span id="totalCount" class="stats-number">-</span>
+            <div id="totalCount" class="stats-number">-</div>
             <p>自動更新...</p>
           </div>
           <div>
             <h2>用戶數量</h2>
             <div class="server-stats">
-                <span id="userCount" class="stats-number">-</span>
+                <div id="userCount" class="stats-number">-</div>
                 <div id="userChange" class="stats-change">-</div>
             </div>
             <p>自動更新...</p>
@@ -517,65 +516,44 @@ tr:hover {
 
       async function fetchTotalTimes() {
   try {
-    const [totalResponse, serverResponse, userResponse] = await Promise.all([
+    const [totalResponse, serverResponse] = await Promise.all([
       fetch("https://api.allorigins.win/get?url=https%3A%2F%2Fmygo-api.yichen0403.us.kg%2Fapi%2Franks%2Ftotal"),
-      fetch("https://api.allorigins.win/get?url=" + encodeURIComponent("https://mygo-api.yichen0403.us.kg/api/server_count")),
-      fetch("https://api.allorigins.win/get?url=" + encodeURIComponent("https://mygo-api.yichen0403.us.kg/api/user_count"))
+      fetch("https://api.allorigins.win/get?url=" + encodeURIComponent("https://mygo-api.yichen0403.us.kg/api/server_count"))
     ]);
 
     const totalData = await totalResponse.json();
     const serverData = await serverResponse.json();
-    const userData = await userResponse.json();
 
     const totalJson = JSON.parse(totalData.contents);
     const serverJson = JSON.parse(serverData.contents);
-    const userJson = JSON.parse(userData.contents);
 
     if (totalJson.status === "success") {
-      if (document.getElementById("totalCount").textContent === "-") {
-        initNumberFlow("totalCount", totalJson.total_times);
-      } else {
-        updateNumberFlow("totalCount", totalJson.total_times);
-      }
+      document.getElementById("totalCount").textContent = totalJson.total_times;
     }
 
     if (serverJson.status === "success" && serverJson.total_times.length > 0) {
       const serverTimes = serverJson.total_times;
-      const currentCount = serverTimes[serverTimes.length - 1].server_count;
-      const previousCount = serverTimes[serverTimes.length - 2]?.server_count;
+      const currentData = serverTimes[serverTimes.length - 1];
+      const previousData = serverTimes[serverTimes.length - 2];
       
-      if (document.getElementById("serverCount").textContent === "-") {
-        initNumberFlow("serverCount", currentCount);
-      } else {
-        updateNumberFlow("serverCount", currentCount);
-      }
+      // 更新伺服器數量和變化
+      document.getElementById("serverCount").textContent = currentData.server_count;
       
-      // 計算並顯示變化
-      if (previousCount) {
-        const change = currentCount - previousCount;
-        const changeElement = document.getElementById("serverChange");
-        changeElement.textContent = change > 0 ? `+${change}` : change;
-        changeElement.className = `stats-change ${change >= 0 ? 'positive' : 'negative'}`;
+      if (previousData) {
+        const serverChange = currentData.server_count - previousData.server_count;
+        const serverChangeElement = document.getElementById("serverChange");
+        serverChangeElement.textContent = serverChange > 0 ? `+${serverChange}` : serverChange;
+        serverChangeElement.className = `stats-change ${serverChange >= 0 ? 'positive' : 'negative'}`;
       }
-    }
 
-    if (userJson.status === "success" && userJson.user_count.length > 0) {
-      const userCounts = userJson.user_count;
-      const currentCount = userCounts[userCounts.length - 1].user_count;
-      const previousCount = userCounts[userCounts.length - 2]?.user_count;
+      // 更新用戶數量和變化
+      document.getElementById("userCount").textContent = currentData.user_count;
       
-      if (document.getElementById("userCount").textContent === "-") {
-        initNumberFlow("userCount", currentCount);
-      } else {
-        updateNumberFlow("userCount", currentCount);
-      }
-      
-      // 計算並顯示變化
-      if (previousCount) {
-        const change = currentCount - previousCount;
-        const changeElement = document.getElementById("userChange");
-        changeElement.textContent = change > 0 ? `+${change}` : change;
-        changeElement.className = `stats-change ${change >= 0 ? 'positive' : 'negative'}`;
+      if (previousData) {
+        const userChange = currentData.user_count - (previousData.user_count || 0);
+        const userChangeElement = document.getElementById("userChange");
+        userChangeElement.textContent = userChange > 0 ? `+${userChange}` : userChange;
+        userChangeElement.className = `stats-change ${userChange >= 0 ? 'positive' : 'negative'}`;
       }
     }
   } catch (error) {
@@ -952,36 +930,6 @@ const tableHTML = `
 
       // 每分鐘更新一次數據
       setInterval(refreshData, 60000);
-
-
-
-      function initNumberFlow(elementId, endVal) {
-  const domContainer = document.querySelector('#' + elementId);
-  ReactDOM.render(
-    React.createElement(NumberFlow, {
-      end: endVal, 
-      duration: 2,
-      animation: 'zoom',
-      style: { fontSize: '3em', fontWeight: 'bold', color: '#2575fc' }
-    }), 
-    domContainer
-  );
-}
-
-function updateNumberFlow(elementId, endVal) {
-  const domContainer = document.querySelector('#' + elementId);
-  ReactDOM.render(
-    React.createElement(NumberFlow, {
-      start: Number(domContainer.textContent),
-      end: endVal,
-      duration: 2,
-      decimals: 0,
-      animation: 'zoom',
-      style: { fontSize: '3em', fontWeight: 'bold', color: '#2575fc' }      
-    }),
-    domContainer
-  );  
-}
     </script>
   </body>
 </html>
