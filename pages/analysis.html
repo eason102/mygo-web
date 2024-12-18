@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MyGO 台詞統計</title>
+    <title>MyGO台詞BOT-即時數據</title>
     <!-- Chart.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <!-- Font Awesome -->
@@ -381,8 +381,8 @@ tr:hover {
   </head>
   <body>
     <div class="header">
-      <h1>MyGO 台詞統計</h1>
-      <p>即時數據視覺化與場景預覽</p>
+      <h1>即時數據</h1>
+      <p>MyGO!!!!!台詞BOT</p>
     </div>
 
     <div class="container">
@@ -397,9 +397,9 @@ tr:hover {
             <p>自動更新中...</p>
           </div>
           <div>
-            <h2>總使用次數</h2>
+            <h2>總使用數</h2>
             <div id="totalCount" class="stats-number">-</div>
-            <p>自動更新中...</p>
+            <p>自動更新...</p>
           </div>
           <div>
             <h2>用戶數量</h2>
@@ -407,13 +407,13 @@ tr:hover {
                 <div id="userCount" class="stats-number">-</div>
                 <div id="userChange" class="stats-change">-</div>
             </div>
-            <p>自動更新中...</p>
+            <p>自動更新...</p>
 
           </div>
         </div>
       </div>
 
-      <!-- 修改按鈕組，移除圖表類型切換按鈕 -->
+      
       <div class="button-group">
         <button
           class="btn btn-blue"
@@ -434,6 +434,9 @@ tr:hover {
         </button>
         <button class="btn btn-purple" onclick="toggleTable()">
           <i class="fas fa-table"></i> 顯示/隱藏表格
+        </button>
+        <button class="btn btn-purple" onclick="window.location.href='https://uptime.yichen0403.us.kg/status/mygo'">
+          <i class="fas fa-signal"></i> 伺服器狀態
         </button>
       </div>
 
@@ -686,7 +689,7 @@ tr:hover {
         updateButtonStates(type);
       }
 
-      // 修改 updateButtonStates 函数
+
       function updateButtonStates(type) {
         const rankButton = document.getElementById("rankButton");
         const serverButton = document.getElementById("serverButton");
