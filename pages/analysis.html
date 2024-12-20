@@ -398,7 +398,10 @@ tr:hover {
           </div>
           <div>
             <h2>總使用數</h2>
-            <div id="totalCount" class="stats-number">-</div>
+            <div class="server-stats">
+              <div id="totalCount" class="stats-number">-</div>
+              <div id="totalChange" class="stats-change">-</div>
+            </div>
             <p>自動更新...</p>
           </div>
           <div>
@@ -527,9 +530,24 @@ tr:hover {
     const totalJson = JSON.parse(totalData.contents);
     const serverJson = JSON.parse(serverData.contents);
 
-    if (totalJson.status === "success") {
-      document.getElementById("totalCount").textContent = totalJson.total_times;
+
+  // 檢查 status 和 total_times 陣列
+  if (totalJson.status === "success" && totalJson.total_times.length > 0) {
+    const totalTimes = totalJson.total_times;
+    const currentTotal = totalTimes[totalTimes.length - 1];
+    const previousTotal = totalTimes.length > 1 ? totalTimes[totalTimes.length - 2] : null;
+
+    // 更新總使用次數
+    document.getElementById("totalCount").textContent = currentTotal.count;
+    
+    // 如果有前一天的資料，計算並顯示變化
+    if (previousTotal) {
+      const totalChange = currentTotal.count - previousTotal.count;
+      const totalChangeElement = document.getElementById("totalChange");
+      totalChangeElement.textContent = totalChange > 0 ? `+${totalChange}` : totalChange;
+      totalChangeElement.className = `stats-change ${totalChange >= 0 ? 'positive' : 'negative'}`;
     }
+  }
 
     if (serverJson.status === "success" && serverJson.total_times.length > 0) {
       const serverTimes = serverJson.total_times;
@@ -565,7 +583,6 @@ tr:hover {
     document.getElementById("userChange").textContent = "-";
   }
 }
-
       async function fetchFramePreview(item) {
         const previewCard = document.getElementById("previewCard");
         const previewLoading = document.getElementById("previewLoading");
