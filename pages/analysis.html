@@ -192,7 +192,6 @@ body {
 }
 
 .preview-card {
-  display: none;
   animation: fadeIn 0.3s ease;
 }
 
@@ -473,7 +472,6 @@ tr:hover {
         </div>
       </div>
 
-      
       <div class="button-group">
         <button
           class="btn btn-blue"
@@ -492,38 +490,20 @@ tr:hover {
         <button class="btn btn-green" onclick="refreshData()">
           <i class="fas fa-sync-alt"></i> 手動更新
         </button>
-        <button class="btn btn-purple" onclick="toggleTable()">
-          <i class="fas fa-table"></i> 顯示/隱藏表格
-        </button>
         <button class="btn btn-purple" onclick="window.location.href='https://uptime.tomorin.cc/status/mygo'">
           <i class="fas fa-signal"></i> 伺服器狀態
         </button>
       </div>
 
-      <div class="grid">
-        <div class="card chart-card" id="chartCard">
+      <div class="grid" id="rankGrid">
+        <div class="card chart-card">
           <div class="chart-header">
-            <h2>數據視圖</h2>
+            <h2>數據視圖 (MyGO!!!!!)</h2>
             <!-- 排名數據的控制項 -->
             <div id="ranksControls" class="chart-controls">
-              <button class="btn btn-sm btn-blue" onclick="toggleChartType()">
+              <button class="btn btn-sm btn-blue" onclick="toggleChartType('ranks')">
                 <i class="fas fa-chart-bar"></i> 切換圖表類型
               </button>
-            </div>
-            <!-- 伺服器數據的控制項 -->
-            <div
-              id="serverControls"
-              class="chart-controls"
-              style="display: none"
-            >
-              <select
-                id="timeRange"
-                class="time-range-select"
-                onchange="updateServerChart()"
-              >
-                <option value="week">最近一週</option>
-                <option value="month">最近一個月</option>
-              </select>
             </div>
           </div>
           <div class="chart-container">
@@ -545,26 +525,80 @@ tr:hover {
             />
           </div>
         </div>
+        <div id="rankTableCard" class="card" style="display: none;">
+          <div class="table-container">
+              <table>
+                  <thead>
+                      <tr>
+                          <th>排名</th>
+                          <th>台詞</th>
+                          <th>使用次數</th>
+                          <th>集數</th>
+                      </tr>
+                  </thead>
+                  <tbody id="rankTableBody"></tbody>
+              </table>
+          </div>
       </div>
+      </div>
+
+      <div class="grid" id="aveRankGrid">
+        <div class="card chart-card">
+          <div class="chart-header">
+            <h2>數據視圖 (Ave Mujica)</h2>
+            <!-- 平均排名數據的控制項 -->
+            <div id="aveRanksControls" class="chart-controls">
+              <button class="btn btn-sm btn-blue" onclick="toggleChartType('aveRanks')">
+                <i class="fas fa-chart-bar"></i> 切換圖表類型
+              </button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="aveMyChart"></canvas>
+          </div>
+        </div>
+        <div id="avePreviewCard" class="card preview-card">
+          <h2>場景預覽</h2>
+          <div id="avePreviewContent">
+            <div id="avePreviewText" class="text-lg font-bold"></div>
+            <div id="avePreviewInfo" class="text-gray-600"></div>
+            <div id="avePreviewLoading" class="loading" style="display: none">
+              <div class="spinner"></div>
+            </div>
+            <img id="avePreviewImage" class="preview-image" style="display: none" />
+          </div>
+        </div>
+        </div>
+      </div>
+
+      <div class="grid" id="serverGrid" style="display: none;">
+        <div class="card chart-card expanded">
+          <div class="chart-header">
+            <h2>數據視圖 (伺服器)</h2>
+            <!-- 伺服器數據的控制項 -->
+            <div
+              id="serverControls"
+              class="chart-controls"
+            >
+              <select
+                id="timeRange"
+                class="time-range-select"
+                onchange="updateServerChart()"
+              >
+                <option value="week">最近一週</option>
+                <option value="month">最近一個月</option>
+              </select>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="serverMyChart"></canvas>
+          </div>
+        </div>
+      </div>
+
       <button class="float-home-button" onclick="window.location.href='/'" title="回到首頁">
         <i class="fas fa-home"></i>
       </button>
-
-      <div id="tableCard" class="card" style="display: none">
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>排名</th>
-                <th>台詞</th>
-                <th>使用次數</th>
-                <th>集數</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-          </table>
-        </div>
-      </div>
     </div>
 
     <script>
@@ -572,20 +606,18 @@ tr:hover {
       let currentChartType = "bar";
       let currentDataType = "ranks";
       let top10Data = [];
+      let aveRanksTop10Data = [];
       let serverData = [];
 
       async function fetchTotalTimes() {
   try {
     const [totalResponse, serverResponse] = await Promise.all([
-      fetch("https://api.allorigins.win/get?url=https%3A%2F%2Fmygo-api.tomorin.cc%2Fapi%2Franks%2Ftotal"),
-      fetch("https://api.allorigins.win/get?url=" + encodeURIComponent("https://mygo-api.tomorin.cc/api/server_count"))
+      fetch("https://mygo-api.tomorin.cc/api/ranks/total"),
+      fetch("https://mygo-api.tomorin.cc/api/server_count")
     ]);
 
-    const totalData = await totalResponse.json();
-    const serverData = await serverResponse.json();
-
-    const totalJson = JSON.parse(totalData.contents);
-    const serverJson = JSON.parse(serverData.contents);
+    const totalJson = await totalResponse.json();
+    const serverJson = await serverResponse.json();
 
 
   // 檢查 status 和 total_times 陣列
@@ -596,7 +628,7 @@ tr:hover {
 
     // 更新總使用次數
     document.getElementById("totalCount").textContent = currentTotal.count;
-    
+
     // 如果有前一天的資料，計算並顯示變化
     if (previousTotal) {
       const totalChange = currentTotal.count - previousTotal.count;
@@ -610,10 +642,10 @@ tr:hover {
       const serverTimes = serverJson.total_times;
       const currentData = serverTimes[serverTimes.length - 1];
       const previousData = serverTimes[serverTimes.length - 2];
-      
+
       // 更新伺服器數量和變化
       document.getElementById("serverCount").textContent = currentData.server_count;
-      
+
       if (previousData) {
         const serverChange = currentData.server_count - previousData.server_count;
         const serverChangeElement = document.getElementById("serverChange");
@@ -623,7 +655,7 @@ tr:hover {
 
       // 更新用戶數量和變化
       document.getElementById("userCount").textContent = currentData.user_count;
-      
+
       if (previousData) {
         const userChange = currentData.user_count - (previousData.user_count || 0);
         const userChangeElement = document.getElementById("userChange");
@@ -647,7 +679,6 @@ tr:hover {
         const previewText = document.getElementById("previewText");
         const previewInfo = document.getElementById("previewInfo");
 
-        previewCard.style.display = "block";
         previewLoading.style.display = "flex";
         previewImage.style.display = "none";
 
@@ -685,40 +716,110 @@ tr:hover {
         }
       }
 
+      async function fetchAveFramePreview(item) {
+        const previewCard = document.getElementById("avePreviewCard");
+        const previewLoading = document.getElementById("avePreviewLoading");
+        const previewText = document.getElementById("avePreviewText");
+        const previewInfo = document.getElementById("avePreviewInfo");
+        const previewImage = document.createElement('img');
+        previewImage.className = "preview-image";
+        previewImage.style.display = "none";
+        
+        // Remove old image if exists
+        const oldImage = previewCard.querySelector('.preview-image');
+        if (oldImage) {
+            oldImage.remove();
+        }
+        
+        // Remove placeholder if exists
+        const placeholder = document.getElementById("avePreviewImagePlaceholder");
+        if (placeholder) {
+            placeholder.remove();
+        }
+
+        previewLoading.style.display = "flex";
+
+        previewText.textContent = item.text;
+        previewInfo.innerHTML = `集數: ${item.episode} | 使用次數: ${item.times}`;
+
+        try {
+            const frameData = {
+                text: item.text,
+                episode: item.episode,
+                frame_start: item.frame_start || 776,
+                frame_end: item.frame_end || 784,
+            };
+
+            const response = await fetch(
+                "https://mygo-api-2.tomorin.cc/api/proxy-ave",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(frameData),
+                }
+            );
+
+            const data = await response.json();
+            if (data.url) {
+                previewImage.src = data.url;
+                previewImage.style.display = "block";
+                previewCard.querySelector('#avePreviewContent').appendChild(previewImage);
+            }
+        } catch (error) {
+            console.error("Error fetching frame:", error);
+            const errorMsg = document.createElement('p');
+            errorMsg.textContent = "Failed to load image";
+            previewCard.querySelector('#avePreviewContent').appendChild(errorMsg);
+        } finally {
+            previewLoading.style.display = "none";
+        }
+      }
+
       async function fetchTop10() {
+  try {
+    const response = await fetch("https://mygo-api.tomorin.cc/api/ranks/top10");
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const proxyData = await response.json();
+
+
+    if (Array.isArray(proxyData.data)) { 
+      top10Data = proxyData.data;
+      updateChart('ranks');  
+      updateTable('rankTable');
+    }
+  } catch (error) {
+    console.error("Error fetching top 10:", error);
+  }
+}
+
+
+async function fetchAveRanksTop10() {
         try {
           const response = await fetch(
-            "https://api.allorigins.win/get?url=https%3A%2F%2Fmygo-api.tomorin.cc%2Fapi%2Franks%2Ftop10"
+            "https://mygo-api.tomorin.cc/api/ave_ranks/top10"
           );
-          const proxyData = await response.json();
-          const data = JSON.parse(proxyData.contents);
+          const data = await response.json();
 
           if (Array.isArray(data.data)) {
-            top10Data = data.data;
-            if (currentDataType === "ranks") {
-              updateChart();
-            }
-            updateTable();
-            // 自動顯示第一名的場景預覽
-            if (top10Data.length > 0) {
-              fetchFramePreview(top10Data[0]);
-            }
+            aveRanksTop10Data = data.data;
+            updateChart('aveRanks');
+            // updateTable('aveRankTable');
           }
         } catch (error) {
-          console.error("Error fetching top 10:", error);
+          console.error("Error fetching ave ranks top 10:", error);
         }
       }
 
       async function fetchServerCount() {
         try {
-          const response = await fetch(
-            "https://api.allorigins.win/get?url=" +
-              encodeURIComponent(
-                "https://mygo-api.tomorin.cc/api/server_count"
-              )
-          );
-          const proxyData = await response.json();
-          const data = JSON.parse(proxyData.contents);
+          const response = await fetch("https://mygo-api.tomorin.cc/api/server_count");
+          const data = await response.json();
 
           if (data.status === "success") {
             serverData = data.total_times;
@@ -734,46 +835,54 @@ tr:hover {
       // 修改 toggleDataType 函数
       function toggleDataType(type) {
         currentDataType = type;
-        const serverControls = document.getElementById("serverControls");
-        const ranksControls = document.getElementById("ranksControls");
-        const previewCard = document.getElementById("previewCard");
-        const chartCard = document.getElementById("chartCard");
+        const serverGrid = document.getElementById("serverGrid");
+        const rankGrid = document.getElementById("rankGrid");
+        const aveRankGrid = document.getElementById("aveRankGrid");
 
         if (type === "server") {
-          // 切換到伺服器數據
-          serverControls.style.display = "flex";
-          ranksControls.style.display = "none";
-          previewCard.style.display = "none";
-          chartCard.classList.add("expanded");
-          // 立即加載伺服器數據
+          rankGrid.style.display = "none";
+          aveRankGrid.style.display = "none";
+          serverGrid.style.display = "grid";
           fetchServerCount().then(() => {
             updateServerChart();
           });
+        } else if (type === "aveRanks") {
+          rankGrid.style.display = "grid";
+          aveRankGrid.style.display = "grid";
+          serverGrid.style.display = "none";
+          updateChart('aveRanks');
         } else {
-          // 切換到排名數據
-          serverControls.style.display = "none";
-          ranksControls.style.display = "flex";
-          previewCard.style.display = "block";
-          chartCard.classList.remove("expanded");
-          // 立即更新排名圖表
-          updateChart();
+          rankGrid.style.display = "grid";
+          aveRankGrid.style.display = "grid";
+          serverGrid.style.display = "none";
+          updateChart('ranks');
         }
 
         // 更新按鈕狀態
         updateButtonStates(type);
       }
 
-
       function updateButtonStates(type) {
         const rankButton = document.getElementById("rankButton");
+        const aveRankButton = document.getElementById("aveRankButton");
         const serverButton = document.getElementById("serverButton");
       }
 
-      function updateTable() {
-        const tableBody = document.getElementById("tableBody");
+      function updateTable(tableId) {
+        const tableBody = document.getElementById(tableId + 'Body');
         tableBody.innerHTML = "";
+        let currentData = [];
+        let previewFunction;
 
-        top10Data.forEach((item, index) => {
+        if (tableId === 'rankTable') {
+          currentData = top10Data;
+          previewFunction = fetchFramePreview;
+        } else if (tableId === 'aveRankTable') {
+          currentData = aveRanksTop10Data;
+          previewFunction = fetchAveFramePreview;
+        }
+
+        currentData.forEach((item, index) => {
           const row = document.createElement("tr");
           row.innerHTML = `
             <td>${index + 1}</td>
@@ -781,14 +890,14 @@ tr:hover {
             <td>${item.times}</td>
             <td>${item.episode}</td>
         `;
-          row.onclick = () => fetchFramePreview(item);
+          row.onclick = () => previewFunction(item);
           tableBody.appendChild(row);
         });
       }
 
       function updateServerChart() {
   const timeRange = document.getElementById("timeRange").value;
-  const ctx = document.getElementById("myChart").getContext("2d");
+  const ctx = document.getElementById("serverMyChart").getContext("2d");
 
   // 根據選擇的時間範圍過濾數據
   const currentDate = new Date();
@@ -876,42 +985,10 @@ tr:hover {
       },
     },
   });
-
-  // 更新表格
-  const tableBody = document.getElementById("tableBody");
-  tableBody.innerHTML = "";
-
-  filteredData.reverse().forEach((item) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${item.date}</td>
-      <td>${item.server_count}</td>
-      <td>${item.user_count}</td>
-    `;
-    tableBody.appendChild(row);
-  });
 }
 
-// 更新表格的 HTML 部分
-const tableHTML = `
-<div id="tableCard" class="card" style="display: none">
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th>日期</th>
-          <th>伺服器數量</th>
-          <th>用戶數量</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
-</div>
-`;
-
-      function updateChart() {
-        const ctx = document.getElementById("myChart").getContext("2d");
+      function updateChart(chartType) {
+        const ctx = document.getElementById(chartType === 'ranks' ? 'myChart' : 'aveMyChart').getContext('2d');
         const colors = [
           "#FF6384",
           "#36A2EB",
@@ -924,19 +1001,22 @@ const tableHTML = `
           "#FFD54F",
           "#4DB6AC",
         ];
+        const chartData = chartType === 'ranks' ? top10Data : aveRanksTop10Data;
+        const chartId = chartType === 'ranks' ? 'myChart' : 'aveMyChart';
+        let currentChartInstance = chartType === 'ranks' ? currentChart : window.aveCurrentChart; // Use a separate variable for aveChart
 
-        if (currentChart) {
-          currentChart.destroy();
+        if (currentChartInstance) {
+          currentChartInstance.destroy();
         }
 
         const chartConfig = {
           type: currentChartType,
           data: {
-            labels: top10Data.map((item) => item.text),
+            labels: chartData.map((item) => item.text),
             datasets: [
               {
                 label: "使用次數",
-                data: top10Data.map((item) => item.times),
+                data: chartData.map((item) => item.times),
                 backgroundColor:
                   currentChartType === "bar"
                     ? colors
@@ -956,12 +1036,16 @@ const tableHTML = `
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            onClick: (event, elements) => {
+             onClick: (event, elements) => {
               if (elements.length > 0) {
                 const index = elements[0].index;
-                fetchFramePreview(top10Data[index]);
-              }
-            },
+                if (chartType === 'ranks') {
+                   fetchFramePreview(top10Data[index]);
+                } else {
+                  fetchAveFramePreview(aveRanksTop10Data[index]);
+                 }
+               }
+              },
             scales: {
               x: {
                 ticks: {
@@ -973,37 +1057,47 @@ const tableHTML = `
           },
         };
 
-        currentChart = new Chart(ctx, chartConfig);
-      }
-
-      function toggleChartType() {
-        if (currentDataType === "ranks") {
-          currentChartType = currentChartType === "bar" ? "line" : "bar";
-          updateChart();
+        currentChartInstance = new Chart(ctx, chartConfig);
+        if (chartType === 'aveRanks') {
+          window.aveCurrentChart = currentChartInstance;
+        } else {
+          currentChart = currentChartInstance;
         }
       }
 
-      function toggleTable() {
-        const tableCard = document.getElementById("tableCard");
-        tableCard.style.display =
-          tableCard.style.display === "none" ? "block" : "none";
+
+      function toggleChartType(chartType) {
+        currentChartType = currentChartType === "bar" ? "line" : "bar";
+        updateChart(chartType);
       }
 
-      function refreshData() {
-        fetchTotalTimes();
-        fetchTop10();
-        fetchServerCount();
+     async function refreshData() {
+        await Promise.all([
+            fetchTotalTimes(),
+            fetchTop10(),
+            fetchAveRanksTop10(),
+            fetchServerCount()
+        ]);
       }
 
       // 初始化
-      document.addEventListener("DOMContentLoaded", () => {
-        refreshData();
+      document.addEventListener("DOMContentLoaded", async () => {
+        await refreshData();
         // 設置初始狀態
         toggleDataType("ranks");
+
+         // 初始化時顯示第一個場景預覽（如果 top10Data 或 aveRanksTop10Data 有資料）
+        if (top10Data?.length > 0) {
+            await fetchFramePreview(top10Data[0]);
+        }
+        if (aveRanksTop10Data?.length > 0) {
+            await fetchAveFramePreview(aveRanksTop10Data[0]);
+        }
+
       });
 
       // 每分鐘更新一次數據
       setInterval(refreshData, 60000);
     </script>
-  </body>
+    </body>
 </html>
