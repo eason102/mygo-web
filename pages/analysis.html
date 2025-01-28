@@ -717,65 +717,71 @@ tr:hover {
       }
 
       async function fetchAveFramePreview(item) {
-        const previewCard = document.getElementById("avePreviewCard");
-        const previewLoading = document.getElementById("avePreviewLoading");
-        const previewText = document.getElementById("avePreviewText");
-        const previewInfo = document.getElementById("avePreviewInfo");
-        const previewImage = document.createElement('img');
-        previewImage.className = "preview-image";
-        previewImage.style.display = "none";
-        
-        // Remove old image if exists
-        const oldImage = previewCard.querySelector('.preview-image');
-        if (oldImage) {
-            oldImage.remove();
-        }
-        
-        // Remove placeholder if exists
-        const placeholder = document.getElementById("avePreviewImagePlaceholder");
-        if (placeholder) {
-            placeholder.remove();
-        }
+  const previewCard = document.getElementById("avePreviewCard");
+  const previewLoading = document.getElementById("avePreviewLoading");
+  const previewText = document.getElementById("avePreviewText");
+  const previewInfo = document.getElementById("avePreviewInfo");
+  const previewImage = document.createElement('img');
+  previewImage.className = "preview-image";
+  previewImage.style.display = "none";
 
-        previewLoading.style.display = "flex";
+  // 移除舊圖片 (如果存在)
+  const oldImage = previewCard.querySelector('.preview-image');
+  if (oldImage) {
+    oldImage.remove();
+  }
 
-        previewText.textContent = item.text;
-        previewInfo.innerHTML = `集數: ${item.episode} | 使用次數: ${item.times}`;
+  // 移除 placeholder (如果存在)
+  const placeholder = document.getElementById("avePreviewImagePlaceholder");
+  if (placeholder) {
+    placeholder.remove();
+  }
 
-        try {
-            const frameData = {
-                text: item.text,
-                episode: item.episode,
-                frame_start: item.frame_start || 776,
-                frame_end: item.frame_end || 784,
-            };
+  previewLoading.style.display = "flex";
 
-            const response = await fetch(
-                "https://mygo-api-2.tomorin.cc/api/proxy-ave",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(frameData),
-                }
-            );
+  previewText.textContent = item.text;
+  previewInfo.innerHTML = `集數: ${item.episode} | 使用次數: ${item.times}`;
 
-            const data = await response.json();
-            if (data.url) {
-                previewImage.src = data.url;
-                previewImage.style.display = "block";
-                previewCard.querySelector('#avePreviewContent').appendChild(previewImage);
-            }
-        } catch (error) {
-            console.error("Error fetching frame:", error);
-            const errorMsg = document.createElement('p');
-            errorMsg.textContent = "Failed to load image";
-            previewCard.querySelector('#avePreviewContent').appendChild(errorMsg);
-        } finally {
-            previewLoading.style.display = "none";
-        }
+  try {
+    const frameData = {
+      text: item.text,
+      episode: item.episode,
+      frame_start: item.frame_start || 776,
+      frame_end: item.frame_end || 784,
+    };
+
+    const response = await fetch(
+        "https://mygo-api.tomorin.cc/api/ave-frames",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(frameData),
       }
+    );
+    
+    // 修改: 使用 blob() 來處理二進制數據
+    if (response.ok) {  // 確保響應狀態碼為 200-299
+        const blob = await response.blob(); 
+        const imageUrl = URL.createObjectURL(blob);
+        previewImage.src = imageUrl;
+        previewImage.style.display = "block";
+        previewCard.querySelector('#avePreviewContent').appendChild(previewImage);
+    } else {
+        // 響應不是成功狀態，拋出錯誤
+        throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    
+  } catch (error) {
+    console.error("Error fetching frame:", error);
+    const errorMsg = document.createElement('p');
+    errorMsg.textContent = "Failed to load image";
+    previewCard.querySelector('#avePreviewContent').appendChild(errorMsg);
+  } finally {
+    previewLoading.style.display = "none";
+  }
+}
 
       async function fetchTop10() {
   try {

@@ -4,19 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ave Mujica 台詞搜尋</title>
-    <link rel="stylesheet" href="style.css">
+    <link href="output.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container">
-        <h1>Ave Mujica 台詞搜尋</h1>
-        <div class="search-container">
-            <input type="text" id="keyword" placeholder="請輸入關鍵字">
-            <button id="search-btn">搜尋</button>
+<body style="background-color: #f0f0f0; color: #f0f0f0;">
+    <style>
+        @media (min-width: 1024px) {
+            body {
+                transform: scale(1.5);
+                transform-origin: top center;
+            }
+        }
+    </style>
+    <div id="notification-container"></div>
+    <div class="container mx-auto p-4" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+        <h1 class="text-3xl font-bold text-center mb-4" style="color: #333;">Ave Mujica 台詞搜尋</h1>
+        
+        <div class="button-bar flex flex-col sm:flex-row justify-center gap-4 mb-4">
+            <a href="https://discord.com/oauth2/authorize?client_id=1315838959708012604" class="btn w-full sm:w-auto" style="background-color: #007bff; color: #fff;">Discord 機器人</a>
+            <a href="https://mygo-bot-web.tomorin.cc/pages/analysis.html" class="btn w-full sm:w-auto" style="background-color: #28a745; color: #fff;">即時數據</a>
         </div>
+        
+        <div class="stats-container text-center mb-4" style="color: #333;">
+            <p>建置中</p>
+            <p>總收錄台詞：1169句 / 四集</p>
+            <p>總收錄場景：100個 / 四集</p>
+        </div>
+        
+        <div class="search-container flex flex-col sm:flex-row items-center gap-4 mb-4">
+            <input type="text" id="keyword" class="w-full sm:w-auto p-2 rounded" placeholder="請輸入關鍵字" style="background-color: #ffffff; border: 1px solid #ccc; color: #333;">
+            <button id="search-btn" class="w-full sm:w-auto p-2 rounded" style="background-color: #d23952; color: #ffffff;">搜尋</button>
+        </div>
+        
+        <div class="search-type-options flex flex-wrap gap-4 mb-4" style="color: #333;">
+            <label><input type="radio" name="search-type" value="both" checked> 台詞與場景</label>
+            <label><input type="radio" name="search-type" value="ocr"> 台詞</label>
+            <label><input type="radio" name="search-type" value="scene"> 場景</label>
+        </div>
+        
+        <div class="character-filter-options flex flex-wrap gap-4 mb-4" style="color: #333;">
+            <label><input type="checkbox" value="amoris" checked> Amoris</label>
+            <label><input type="checkbox" value="timoris" checked> Timoris</label>
+            <label><input type="checkbox" value="mortis" checked> Mortis</label>
+            <label><input type="checkbox" value="doloris" checked> Doloris</label>
+            <label><input type="checkbox" value="oblivionis" checked> Oblivionis</label>
+        </div>
+        
         <div id="results-container" class="results-container">
-             <!-- 搜尋結果將會顯示在這裡 -->
+            <!-- 搜尋結果將會顯示在這裡 -->
         </div>
     </div>
-    <script src="script.js"></script>
+
+
+   <!-- 圖片檢視器 Modal 結構 -->
+   <div id="image-viewer-modal" class="image-viewer-modal hidden" style="background-color: rgba(0,0,0,0.9);">
+       <div class="image-viewer-content">
+           <button id="close-viewer" class="btn btn-error absolute top-4 right-4">關閉</button>
+           <span class="close-button" id="close-viewer" style="color: #fff;">×</span>
+
+           <div class="viewer-buttons flex justify-center gap-4 mb-4">
+               <button class="Btn" id="viewer-copy-button" style="background-color: #fff; color: #000;">
+                <div class="sign"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></div>
+                <div class="text">複製</div>
+              </button>
+               <button class="Btn" id="viewer-download-button" style="background-color: #fff; color: #000;">
+                <div class="sign"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 9l-5 5-5-5M12 12.8V2.5"/></svg></div>
+                <div class="text">下載</div>
+              </button>
+               <button class="Btn" id="viewer-toggle-button" style="background-color: #fff; color: #000;">
+                <div class="sign"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H4.2"/></svg></div>
+                <div class="text">標籤視圖</div>
+              </button>
+            </div>
+
+           <div class="main-image-container text-center mb-4">
+               <img id="viewer-main-image" src="" alt="主預覽圖片" class="mx-auto max-w-full max-h-70vh">
+           </div>
+
+           <!-- 新增角色信息顯示區域 -->
+           <div class="character-info" id="character-info" style="color: #fff;">
+               <!-- 角色信息將在這裡顯示 -->
+           </div>
+
+           <div class="preview-frames-container flex overflow-x-auto gap-4 pb-4" id="preview-frames">
+               <!-- 前後幀預覽圖將會顯示在這裡 -->
+           </div>
+       </div>
+   </div>
+
+</div>
+<script src="script.js"></script>
 </body>
 </html>

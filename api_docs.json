@@ -1,0 +1,711 @@
+{
+    "definitions": {
+  
+    },
+    "info": {
+      "description": "",
+      "title": "Tomorin API",
+      "version": "1.0.0"
+    },
+    "paths": {
+      "/api/ave-frames": {
+        "post": {
+          "parameters": [
+            {
+              "description": "台詞文本",
+              "in": "formData",
+              "name": "text",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "description": "動畫集數",
+              "in": "formData",
+              "name": "episode",
+              "required": true,
+              "type": "integer"
+            },
+            {
+              "description": "起始幀數",
+              "in": "formData",
+              "name": "frame_start",
+              "required": true,
+              "type": "integer"
+            },
+            {
+              "description": "結束幀數",
+              "in": "formData",
+              "name": "frame_end",
+              "required": true,
+              "type": "integer"
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": {
+                "image/png": {
+                  "schema": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                }
+              },
+              "description": "成功獲取標籤可視化圖像"
+            },
+            "400": {
+              "description": "請求參數錯誤"
+            },
+            "500": {
+              "description": "伺服器內部錯誤"
+            }
+          },
+          "summary": "獲得動畫截圖"
+        }
+      },
+      "/api/ave-search": {
+        "get": {
+          "parameters": [
+            {
+              "description": "The search keyword",
+              "in": "query",
+              "name": "keyword",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "default": "both",
+              "description": "The type of search to perform",
+              "enum": [
+                "ocr",
+                "scene",
+                "both"
+              ],
+              "in": "query",
+              "name": "search_type",
+              "type": "string"
+            },
+            {
+              "default": [],
+              "description": "Filter by characters",
+              "in": "query",
+              "items": {
+                "type": "string"
+              },
+              "name": "characters",
+              "type": "array"
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "data": {
+                        "items": {
+                          "oneOf": [
+                            {
+                              "properties": {
+                                "characters": {
+                                  "items": {
+                                    "properties": {
+                                      "confidence": {
+                                        "type": "number"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "type": "object"
+                                  },
+                                  "type": "array"
+                                },
+                                "episode": {
+                                  "type": "string"
+                                },
+                                "frame_end": {
+                                  "type": "integer"
+                                },
+                                "frame_start": {
+                                  "type": "integer"
+                                },
+                                "label_visualization": {
+                                  "type": "string"
+                                },
+                                "text": {
+                                  "type": "string"
+                                },
+                                "type": {
+                                  "example": "ocr",
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            {
+                              "properties": {
+                                "characters": {
+                                  "items": {
+                                    "properties": {
+                                      "confidence": {
+                                        "type": "number"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "type": "object"
+                                  },
+                                  "type": "array"
+                                },
+                                "episode_number": {
+                                  "type": "integer"
+                                },
+                                "frame_end": {
+                                  "type": "integer"
+                                },
+                                "frame_start": {
+                                  "type": "integer"
+                                },
+                                "google_gemini_output": {
+                                  "type": "string"
+                                },
+                                "label_visualization": {
+                                  "type": "string"
+                                },
+                                "scene_number": {
+                                  "type": "integer"
+                                },
+                                "type": {
+                                  "example": "scene",
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            }
+                          ]
+                        },
+                        "type": "array"
+                      },
+                      "status": {
+                        "example": "success",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "description": "A list of matching AVE text records or scenes"
+            },
+            "400": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "error": {
+                        "example": "Missing required field: keyword",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "description": "Keyword is missing"
+            },
+            "500": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "error": {
+                        "example": "Internal server error occurred",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "description": "伺服器內部錯誤"
+            }
+          },
+          "summary": "AVE台詞與場景搜尋"
+        }
+      },
+      "/api/ave_ranks": {
+        "post": {
+          "parameters": [
+            {
+              "description": "The AVE rank data",
+              "in": "body",
+              "name": "body",
+              "required": true,
+              "schema": {
+                "properties": {
+                  "episode": {
+                    "description": "The episode number",
+                    "type": "string"
+                  },
+                  "frame_end": {
+                    "description": "The end frame number",
+                    "type": "integer"
+                  },
+                  "frame_start": {
+                    "description": "The start frame number",
+                    "type": "integer"
+                  },
+                  "text": {
+                    "description": "The text of the rank",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "message": {
+                        "example": "Data processed successfully",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "description": "AVE Rank added successfully"
+            }
+          },
+          "security": [
+            {
+              "Bearer": []
+            }
+          ],
+          "summary": "新增AVE使用紀錄"
+        }
+      },
+      "/api/ave_ranks/top10": {
+        "get": {
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "data": {
+                        "items": {
+                          "properties": {
+                            "text": {
+                              "type": "string"
+                            },
+                            "times": {
+                              "type": "integer"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "status": {
+                        "example": "success",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "description": "A list of the top 10 ranked AVE items"
+            }
+          },
+          "summary": "獲得AVE前10名"
+        }
+      },
+      "/api/frame": {
+        "post": {
+          "parameters": [
+            {
+              "description": "Bearer token authentication",
+              "in": "header",
+              "name": "Authorization",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "body",
+              "required": true,
+              "schema": {
+                "properties": {
+                  "episode": {
+                    "description": "The episode number",
+                    "type": "string"
+                  },
+                  "frame_end": {
+                    "description": "The end frame number",
+                    "type": "integer"
+                  },
+                  "frame_start": {
+                    "description": "The start frame number",
+                    "type": "integer"
+                  },
+                  "text": {
+                    "description": "The text of the rank",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text",
+                  "episode",
+                  "frame_start",
+                  "frame_end"
+                ],
+                "type": "object"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "A URL to the generated image",
+              "schema": {
+                "properties": {
+                  "url": {
+                    "example": "https://mygo-api.yichen0403.us.kg/static/images/episode_123_45.jpg",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "401": {
+              "description": "Token is missing",
+              "schema": {
+                "properties": {
+                  "error": {
+                    "example": "Token is missing!",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "403": {
+              "description": "Invalid token",
+              "schema": {
+                "properties": {
+                  "error": {
+                    "example": "Invalid token!",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "security": [
+            {
+              "Bearer": []
+            }
+          ],
+          "summary": "獲得MyGOO截圖",
+          "tags": [
+            "Frame"
+          ]
+        }
+      },
+      "/api/label_visualization": {
+        "get": {
+          "parameters": [
+            {
+              "description": "資料類型，\"ocr\" 或 \"scene\"",
+              "enum": [
+                "ocr",
+                "scene"
+              ],
+              "in": "query",
+              "name": "type",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "description": "動畫集數",
+              "in": "query",
+              "name": "episode",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "description": "起始幀數",
+              "in": "query",
+              "name": "frame_start",
+              "required": true,
+              "type": "integer"
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": {
+                "image/png": {
+                  "schema": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                }
+              },
+              "description": "成功獲取標籤可視化圖像"
+            },
+            "400": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "error": {
+                        "example": "Missing required field: type",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "description": "請求參數錯誤"
+            },
+            "404": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "error": {
+                        "example": "Data not found",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "description": "找不到對應的資料"
+            },
+            "500": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "error": {
+                        "example": "Internal server error occurred",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "description": "伺服器內部錯誤"
+            }
+          },
+          "summary": "獲取標籤可視化圖像"
+        }
+      },
+      "/api/ranks": {
+        "post": {
+          "parameters": [
+            {
+              "description": "The rank data",
+              "in": "body",
+              "name": "body",
+              "required": true,
+              "schema": {
+                "properties": {
+                  "episode": {
+                    "description": "The episode number",
+                    "type": "string"
+                  },
+                  "frame_end": {
+                    "description": "The end frame number",
+                    "type": "integer"
+                  },
+                  "frame_start": {
+                    "description": "The start frame number",
+                    "type": "integer"
+                  },
+                  "text": {
+                    "description": "The text of the rank",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "message": {
+                        "example": "Data processed successfully",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "description": "Rank added successfully"
+            }
+          },
+          "security": [
+            {
+              "Bearer": []
+            }
+          ],
+          "summary": "新增使用紀錄"
+        }
+      },
+      "/api/ranks/top10": {
+        "get": {
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "data": {
+                        "items": {
+                          "properties": {
+                            "text": {
+                              "type": "string"
+                            },
+                            "times": {
+                              "type": "integer"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "status": {
+                        "example": "success",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "description": "A list of the top 10 ranked items"
+            }
+          },
+          "summary": "獲得MyGO使用次數前10名"
+        }
+      },
+      "/api/ranks/total": {
+        "get": {
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "properties": {
+                      "status": {
+                        "example": "success",
+                        "type": "string"
+                      },
+                      "total_times": {
+                        "example": 100,
+                        "type": "integer"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "description": "Total number of times"
+            }
+          },
+          "summary": "獲得總次數"
+        }
+      },
+      "/api/server_count": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "成功獲取伺服器計數",
+              "schema": {
+                "properties": {
+                  "status": {
+                    "example": "success",
+                    "type": "string"
+                  },
+                  "total_times": {
+                    "example": 42,
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "500": {
+              "description": "伺服器內部錯誤",
+              "schema": {
+                "properties": {
+                  "error": {
+                    "example": "Internal server error occurred",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "summary": "獲取伺服器總計數",
+          "tags": [
+            "Server Statistics"
+          ]
+        }
+      },
+      "/health": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "API is healthy",
+              "schema": {
+                "properties": {
+                  "message": {
+                    "example": "API is running",
+                    "type": "string"
+                  },
+                  "status": {
+                    "example": "ok",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "summary": "Health Check Endpoint",
+          "tags": [
+            "Health"
+          ]
+        }
+      }
+    },
+    "securityDefinitions": {
+      "Bearer": {
+        "description": "Enter your bearer token in the format: Bearer \u003Ctoken\u003E",
+        "in": "header",
+        "name": "Authorization",
+        "type": "apiKey"
+      }
+    },
+    "swagger": "2.0"
+  }
