@@ -193,7 +193,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function openImageViewer(mainImageUrl, episode, frameStart, frameEnd, text, type, sceneNumber, characters) {
     const imageViewerModal = document.getElementById('image-viewer-modal');
-    imageViewerModal.classList.add('show'); // 確保添加 'show' class
+      imageViewerModal.classList.remove('hidden');
+      imageViewerModal.classList.add('show');
     viewerMainImage.src = mainImageUrl;
     viewerMainImage.dataset.originalSrc = mainImageUrl;
     viewerMainImage.dataset.type = type;
@@ -202,58 +203,70 @@ document.addEventListener('DOMContentLoaded', function() {
     viewerMainImage.dataset.sceneNumber = sceneNumber;
     displayCharacterInfo(characters);
     fetchPreviewFrames(episode, frameStart, frameEnd, text).then(displayPreviewFrames);
-}
+    centerModal(imageViewerModal);
+  }
 
   function displayCharacterInfo(characters) {
-    const characterInfoContainer = document.getElementById('character-info');
-    characterInfoContainer.innerHTML = ''; // 清空之前的信息
+      const characterInfoContainer = document.getElementById('character-info');
+      characterInfoContainer.innerHTML = '';
 
-    if (characters.length === 0) {
-        characterInfoContainer.textContent = '沒有角色信息';
-        return;
-    }
+      if (characters.length === 0) {
+          characterInfoContainer.textContent = '沒有角色信息';
+          return;
+      }
 
-    const table = document.createElement('table');
-    table.classList.add('character-table', 'w-full', 'text-center', 'mt-4');
+      const table = document.createElement('table');
+      table.classList.add('character-table', 'w-auto', 'text-center', 'mt-4');
+      table.style.transformOrigin = 'left center';
+      const nameRow = document.createElement('tr');
 
-    // 創建第一行：角色名稱
-    const nameRow = document.createElement('tr');
-    characters.forEach(character => {
-        const nameCell = document.createElement('th');
-        nameCell.textContent = `${character.name}`;
-        nameCell.classList.add('p-2', 'bg-gray-200');
-        nameRow.appendChild(nameCell);
-    });
-    table.appendChild(nameRow);
+      characters.forEach(character => {
+          const nameCell = document.createElement('th');
+          nameCell.textContent = `${character.name}`;
+          nameCell.classList.add('p-1', 'bg-gray-200');
+          nameRow.appendChild(nameCell);
+      });
+      table.appendChild(nameRow);
 
-    // 創建第二行：置信度
-    const confidenceRow = document.createElement('tr');
-    characters.forEach(character => {
-        const confidenceCell = document.createElement('td');
-        const confidencePercentage = (character.confidence * 100).toFixed(2);
+      const confidenceRow = document.createElement('tr');
+      characters.forEach(character => {
+          const confidenceCell = document.createElement('td');
+          const confidencePercentage = (character.confidence * 100).toFixed(2);
 
-        // 创建 radial-progress 元素
-        const radialProgress = document.createElement('div');
-        radialProgress.classList.add('radial-progress');
-        radialProgress.setAttribute('style', `--value:${confidencePercentage};`);
-        radialProgress.setAttribute('role', 'progressbar');
-        radialProgress.setAttribute('aria-label', 'Radial Progressbar');
-        radialProgress.textContent = `${confidencePercentage}%`;
+          const radialProgress = document.createElement('div');
+          radialProgress.classList.add('radial-progress');
+          radialProgress.setAttribute('style', `--value:${confidencePercentage};`);
+          radialProgress.setAttribute('role', 'progressbar');
+          radialProgress.setAttribute('aria-label', 'Radial Progressbar');
+          radialProgress.textContent = `${confidencePercentage}%`;
 
-        // 根据置信度设置样式
-        if (confidencePercentage >= 50) {
-            radialProgress.classList.add('text-success');
+          if (confidencePercentage >= 50) {
+              radialProgress.classList.add('text-success');
+          } else {
+              radialProgress.classList.add('text-error');
+          }
+          confidenceCell.appendChild(radialProgress);
+          confidenceRow.appendChild(confidenceCell);
+      });
+      table.appendChild(confidenceRow);
+      characterInfoContainer.appendChild(table);
+
+
+    function adjustTableScale() {
+        const infoWidth = characterInfoContainer.offsetWidth;
+        const tableWidth = table.offsetWidth;
+
+        if (tableWidth > infoWidth) {
+            const scaleFactor = infoWidth / tableWidth;
+            table.style.transform = `scale(${scaleFactor})`;
         } else {
-            radialProgress.classList.add('text-error');
+            table.style.transform = 'scale(1)';
         }
-
-        confidenceCell.appendChild(radialProgress);
-        confidenceRow.appendChild(confidenceCell);
-    });
-    table.appendChild(confidenceRow);
-
-    characterInfoContainer.appendChild(table);
+    }
+     adjustTableScale();
+    window.addEventListener('resize', adjustTableScale);
   }
+
 
   async function fetchPreviewFrames(episode, frameStart, frameEnd, text) {
     const framePromises = [];
@@ -352,35 +365,35 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   async function toggleImage(result, imgElement) {
-    const originalImageUrl = imgElement.dataset.originalSrc || imgElement.src;
-    
-    if (imgElement.src === originalImageUrl) {
+      const originalImageUrl = imgElement.dataset.originalSrc || imgElement.src;
+      
+      if (imgElement.src === originalImageUrl) {
       let apiUrl;
       if (result.type === 'ocr') {
-        apiUrl = `https://mygo-api.tomorin.cc/api/label_visualization?type=ocr&episode=${result.episode}&frame_start=${result.frame_start}`;
+          apiUrl = `https://mygo-api.tomorin.cc/api/label_visualization?type=ocr&episode=${result.episode}&frame_start=${result.frame_start}`;
       } else if (result.type === 'scene') {
-        apiUrl = `https://mygo-api.tomorin.cc/api/label_visualization?type=scene&episode=${result.episode}&scene_number=${result.scene_number}`;
+          apiUrl = `https://mygo-api.tomorin.cc/api/label_visualization?type=scene&episode=${result.episode}&scene_number=${result.scene_number}`;
       } else {
-        console.error("未知的类型:", result.type);
-        showNotification("未知的类型，无法切换图片。");
-        return;
+          console.error("未知的类型:", result.type);
+          showNotification("未知的类型，无法切换图片。");
+          return;
       }
-  
+
       try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
+          const response = await fetch(apiUrl);
+          if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const imageBlob = await response.blob();
-        const imageUrl = URL.createObjectURL(imageBlob);
-        imgElement.src = imageUrl;
+          }
+          const imageBlob = await response.blob();
+          const imageUrl = URL.createObjectURL(imageBlob);
+          imgElement.src = imageUrl;
       } catch (error) {
-        console.error("切換圖片錯誤:", error);
-        showNotification("切換圖片失敗，請稍後再試。");
+          console.error("切換圖片錯誤:", error);
+          showNotification("切換圖片失敗，請稍後再試。");
       }
-    } else {
+      } else {
       imgElement.src = originalImageUrl;
-    }
+      }
   }    
   
   function showNotification(message) {
@@ -399,5 +412,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function hideNotification() {
     notificationContainer.innerHTML = '';
+  }
+
+  document.getElementById('close-viewer').addEventListener('click', function() {
+    const modal = document.getElementById('image-viewer-modal');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.classList.add('hidden');
+    }
+  });
+
+  function centerModal(modal) {
+    // modal.style.position = 'fixed';  移除
+    // modal.style.top = '50%';  移除
+    // modal.style.left = '50%';  移除
+    // modal.style.transform = 'translate(-50%, -50%)';  移除
   }
 });
